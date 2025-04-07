@@ -89,8 +89,46 @@ echo -e "\n"
 
 echo "Testing Booking endpoints..."
 echo "1. Creating a booking..."
-CHECK_IN_DATE=$(date -d "+1 day" +%Y-%m-%d)
-CHECK_OUT_DATE=$(date -d "+5 days" +%Y-%m-%d)
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  CHECK_IN_DATE=$(date -v+1d +%Y-%m-%d)
+  CHECK_OUT_DATE=$(date -v+5d +%Y-%m-%d)
+else
+  CHECK_IN_DATE=$(date -d "+1 day" +%Y-%m-%d 2>/dev/null || date -v+1d +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
+  CHECK_OUT_DATE=$(date -d "+5 days" +%Y-%m-%d 2>/dev/null || date -v+5d +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
+fi
+
+echo "Using check-in date: $CHECK_IN_DATE"
+echo "Using check-out date: $CHECK_OUT_DATE"
+
+if [ -z "$USER_ID" ] || [ -z "$ROOM_ID" ]; then
+  echo "ERROR: Missing user_id or room_id for booking creation"
+  echo "USER_ID: $USER_ID"
+  echo "ROOM_ID: $ROOM_ID"
+  if [ -z "$USER_ID" ]; then
+    echo "Creating a fallback user..."
+    USER_RESPONSE=$(curl -s -X POST $BASE_URL/api/users \
+      -H "Content-Type: application/json" \
+      -d '{"first_name":"Jane","last_name":"Smith","email":"jane.smith@example.com","phone":"9876543210"}')
+    USER_ID=$(echo $USER_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+    echo "Created fallback user with ID: $USER_ID"
+  fi
+  
+  if [ -z "$ROOM_ID" ]; then
+    echo "Creating a fallback hotel and room..."
+    HOTEL_RESPONSE=$(curl -s -X POST $BASE_URL/api/hotels \
+      -H "Content-Type: application/json" \
+      -d '{"name":"Fallback Hotel","address":"456 Backup St","city":"Boston","country":"USA","rating":4}')
+    HOTEL_ID=$(echo $HOTEL_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+    
+    ROOM_RESPONSE=$(curl -s -X POST $BASE_URL/api/rooms \
+      -H "Content-Type: application/json" \
+      -d "{\"hotel_id\":$HOTEL_ID,\"room_number\":\"202\",\"room_type\":\"Standard\",\"price_per_night\":150}")
+    ROOM_ID=$(echo $ROOM_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+    echo "Created fallback room with ID: $ROOM_ID"
+  fi
+fi
+
 BOOKING_RESPONSE=$(curl -s -X POST $BASE_URL/api/bookings \
   -H "Content-Type: application/json" \
   -d "{\"user_id\":$USER_ID,\"room_id\":$ROOM_ID,\"check_in_date\":\"$CHECK_IN_DATE\",\"check_out_date\":\"$CHECK_OUT_DATE\"}")
