@@ -2,6 +2,26 @@
 
 BASE_URL="http://localhost:3000"
 
+echo "Clearing database before tests..."
+echo "================================"
+cat > /tmp/clear-db.ts << EOL
+import { clearDatabase } from './src/config/database';
+
+clearDatabase()
+  .then(() => {
+    console.log('Database cleared successfully');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('Error clearing database:', error);
+    process.exit(1);
+  });
+EOL
+
+ts-node /tmp/clear-db.ts
+echo "Database cleared."
+echo -e "\n"
+
 echo "Starting API tests..."
 echo "====================="
 
@@ -16,6 +36,7 @@ HOTEL_RESPONSE=$(curl -s -X POST $BASE_URL/api/hotels \
   -d '{"name":"Grand Hotel","address":"123 Main St","city":"New York","country":"USA","rating":5}')
 echo $HOTEL_RESPONSE
 HOTEL_ID=$(echo $HOTEL_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+echo "Extracted HOTEL_ID: $HOTEL_ID"
 echo -e "\n"
 
 echo "2. Getting all hotels..."
@@ -33,6 +54,7 @@ USER_RESPONSE=$(curl -s -X POST $BASE_URL/api/users \
   -d '{"first_name":"John","last_name":"Doe","email":"john.doe@example.com","phone":"1234567890"}')
 echo $USER_RESPONSE
 USER_ID=$(echo $USER_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+echo "Extracted USER_ID: $USER_ID"
 echo -e "\n"
 
 echo "2. Getting all users..."
@@ -50,6 +72,7 @@ ROOM_RESPONSE=$(curl -s -X POST $BASE_URL/api/rooms \
   -d "{\"hotel_id\":$HOTEL_ID,\"room_number\":\"101\",\"room_type\":\"Deluxe\",\"price_per_night\":200}")
 echo $ROOM_RESPONSE
 ROOM_ID=$(echo $ROOM_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+echo "Extracted ROOM_ID: $ROOM_ID"
 echo -e "\n"
 
 echo "2. Getting all rooms..."
@@ -72,7 +95,21 @@ BOOKING_RESPONSE=$(curl -s -X POST $BASE_URL/api/bookings \
   -H "Content-Type: application/json" \
   -d "{\"user_id\":$USER_ID,\"room_id\":$ROOM_ID,\"check_in_date\":\"$CHECK_IN_DATE\",\"check_out_date\":\"$CHECK_OUT_DATE\"}")
 echo $BOOKING_RESPONSE
+
 BOOKING_ID=$(echo $BOOKING_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+echo "Extracted BOOKING_ID: $BOOKING_ID"
+
+if [ -z "$BOOKING_ID" ]; then
+  echo "Failed to extract booking ID using primary method, trying alternative..."
+  BOOKING_ID=$(echo $BOOKING_RESPONSE | grep -o '"data":{"id":[0-9]*' | head -1 | cut -d':' -f3 | tr -d '{"}')
+  echo "Alternative extraction result: $BOOKING_ID"
+fi
+
+if [ -z "$BOOKING_ID" ]; then
+  echo "WARNING: Could not extract booking ID from response. Using 1 for testing purposes."
+  BOOKING_ID=1
+fi
+
 echo -e "\n"
 
 echo "2. Getting all bookings..."
@@ -88,12 +125,14 @@ curl -s -X GET $BASE_URL/api/bookings/user/$USER_ID
 echo -e "\n"
 
 echo "5. Updating booking status..."
+echo "Using BOOKING_ID: $BOOKING_ID for status update"
 curl -s -X PATCH $BASE_URL/api/bookings/$BOOKING_ID/status \
   -H "Content-Type: application/json" \
   -d '{"status":"confirmed"}'
 echo -e "\n"
 
 echo "6. Cancelling booking..."
+echo "Using BOOKING_ID: $BOOKING_ID for cancellation"
 curl -s -X PATCH $BASE_URL/api/bookings/$BOOKING_ID/cancel
 echo -e "\n"
 

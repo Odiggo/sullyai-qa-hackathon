@@ -23,6 +23,41 @@ export const openDatabase = async (): Promise<sqlite3.Database> => {
   });
 };
 
+export const clearDatabase = async (): Promise<void> => {
+  const db = await openDatabase();
+  
+  return new Promise((resolve, reject) => {
+    db.serialize(() => {
+      db.run('PRAGMA foreign_keys = OFF;');
+      
+      db.run('DELETE FROM bookings;');
+      db.run('DELETE FROM rooms;');
+      db.run('DELETE FROM users;');
+      db.run('DELETE FROM hotels;');
+      
+      db.run('DELETE FROM sqlite_sequence WHERE name IN ("bookings", "rooms", "users", "hotels");');
+      
+      db.run('PRAGMA foreign_keys = ON;', (err) => {
+        if (err) {
+          console.error('Error clearing database:', err.message);
+          reject(err);
+        } else {
+          console.log('Database cleared successfully');
+          resolve();
+        }
+        
+        db.close((err) => {
+          if (err) {
+            console.error('Error closing database:', err.message);
+          } else {
+            console.log('Database connection closed.');
+          }
+        });
+      });
+    });
+  });
+};
+
 export const initializeDatabase = async (): Promise<void> => {
   const db = await openDatabase();
 
