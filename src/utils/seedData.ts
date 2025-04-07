@@ -101,3 +101,15 @@ export const seedDatabase = async (): Promise<void> => {
     console.error('Error seeding database:', error);
   }
 };
+
+if (require.main === module) {
+  seedDatabase()
+    .then(() => {
+      console.log('Seed script completed successfully');
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('Seed script failed:', error);
+      process.exit(1);
+    });
+}
