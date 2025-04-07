@@ -25,7 +25,7 @@ export const getRoomsByHotelId = async (hotelId: number): Promise<Room[]> => {
 };
 
 export const getAvailableRoomsByHotelId = async (hotelId: number): Promise<Room[]> => {
-  return await getQuery('SELECT * FROM rooms WHERE hotel_id = ? AND is_available = 1', [hotelId]);
+  return await getQuery('SELECT * FROM rooms WHERE hotel_id = ? AND is_available = "1"', [hotelId]);
 };
 
 export const getRoomById = async (id: number): Promise<Room | null> => {

@@ -1,5 +1,3 @@
-
-
 BASE_URL="http://localhost:3000"
 
 echo "Clearing database before tests..."
@@ -112,6 +110,12 @@ if [ -z "$USER_ID" ] || [ -z "$ROOM_ID" ]; then
       -d '{"first_name":"Jane","last_name":"Smith","email":"jane.smith@example.com","phone":"9876543210"}')
     USER_ID=$(echo $USER_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
     echo "Created fallback user with ID: $USER_ID"
+    
+    # Additional fallback if extraction fails
+    if [ -z "$USER_ID" ]; then
+      echo "Failed to extract user ID, using default value 1"
+      USER_ID=1
+    fi
   fi
   
   if [ -z "$ROOM_ID" ]; then
@@ -121,13 +125,29 @@ if [ -z "$USER_ID" ] || [ -z "$ROOM_ID" ]; then
       -d '{"name":"Fallback Hotel","address":"456 Backup St","city":"Boston","country":"USA","rating":4}')
     HOTEL_ID=$(echo $HOTEL_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
     
+    # Additional fallback if extraction fails
+    if [ -z "$HOTEL_ID" ]; then
+      echo "Failed to extract hotel ID, using default value 1"
+      HOTEL_ID=1
+    fi
+    
     ROOM_RESPONSE=$(curl -s -X POST $BASE_URL/api/rooms \
       -H "Content-Type: application/json" \
       -d "{\"hotel_id\":$HOTEL_ID,\"room_number\":\"202\",\"room_type\":\"Standard\",\"price_per_night\":150}")
     ROOM_ID=$(echo $ROOM_RESPONSE | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
     echo "Created fallback room with ID: $ROOM_ID"
+    
+    # Additional fallback if extraction fails
+    if [ -z "$ROOM_ID" ]; then
+      echo "Failed to extract room ID, using default value 1"
+      ROOM_ID=1
+    fi
   fi
 fi
+
+# Ensure we have valid IDs before constructing the JSON
+if [ -z "$USER_ID" ]; then USER_ID=1; fi
+if [ -z "$ROOM_ID" ]; then ROOM_ID=1; fi
 
 BOOKING_RESPONSE=$(curl -s -X POST $BASE_URL/api/bookings \
   -H "Content-Type: application/json" \

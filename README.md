@@ -101,3 +101,32 @@ This project is designed for QA/release engineering interview hackathons. Candid
 1. Add tests for the API endpoints
 2. Build a CI/CD pipeline for releases
 3. Implement automated testing strategies
+
+## Resources for Hackathon
+
+The following resources are provided to help candidates complete the hackathon challenge:
+
+### API Documentation
+
+An OpenAPI/Swagger specification is available in the `api-docs` folder. This provides a detailed description of all API endpoints, request/response models, and examples.
+
+To view the API documentation in an interactive format, you can:
+1. Open [Swagger Editor](https://editor.swagger.io/)
+2. Copy the contents of `api-docs/openapi.yaml` into the editor
+
+### Sample Data
+
+Example request and response payloads can be found in the `data/samples` directory. These examples demonstrate the expected format for API interactions and can be used as a reference when writing tests.
+
+### Postman Collection
+
+A Postman collection is available in the `postman` directory to help you get started with API testing. 
+
+To use it:
+1. Open Postman
+2. Import the collection from `postman/hotel-booking-api.postman_collection.json`
+3. Set the environment variable `baseUrl` to `http://localhost:3000/api` when testing locally
+
+## Hackathon Challenge
+
+For details about the hackathon challenge, including tasks, deliverables, and evaluation criteria, please refer to the [HACKATHON.md](./HACKATHON.md) file.

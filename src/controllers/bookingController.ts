@@ -11,7 +11,7 @@ export const createBooking = async (req: Request, res: Response) => {
     if (!bookingData.user_id || !bookingData.room_id || !bookingData.check_in_date || !bookingData.check_out_date) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields'
+        message: 'Missing required fields'
       });
     }
     
@@ -19,7 +19,7 @@ export const createBooking = async (req: Request, res: Response) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        error: 'User not found'
+        message: 'User not found'
       });
     }
     
@@ -27,7 +27,7 @@ export const createBooking = async (req: Request, res: Response) => {
     if (!room) {
       return res.status(404).json({
         success: false,
-        error: 'Room not found'
+        message: 'Room not found'
       });
     }
     
@@ -37,23 +37,23 @@ export const createBooking = async (req: Request, res: Response) => {
     if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid date format'
+        message: 'Invalid date format'
       });
     }
     
-    if (checkIn >= checkOut) {
+    if (checkIn > checkOut) {
       return res.status(400).json({
         success: false,
-        error: 'Check-out date must be after check-in date'
+        message: 'Check-out date must be after check-in date'
       });
     }
     
     const booking = await bookingService.createBooking(bookingData);
     
     if (!booking) {
-      return res.status(400).json({
+      return res.status(500).json({
         success: false,
-        error: 'Room is not available or invalid booking data'
+        message: 'Failed to create booking'
       });
     }
     

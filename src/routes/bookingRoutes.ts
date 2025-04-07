@@ -5,9 +5,9 @@ const router = express.Router();
 
 router.get('/', bookingController.getAllBookings as any);
 
-router.get('/:id', bookingController.getBookingById as any);
-
 router.get('/user/:userId', bookingController.getBookingsByUserId as any);
+
+router.get('/:id', bookingController.getBookingById as any);
 
 router.post('/', bookingController.createBooking as any);
 
