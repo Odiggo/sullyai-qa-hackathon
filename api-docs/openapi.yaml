@@ -1,0 +1,394 @@
+openapi: 3.0.0
+info:
+  title: Hotel Booking API
+  description: API for hotel search and reservation management
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+paths:
+  /hotels:
+    get:
+      summary: List hotels
+      description: Get a list of hotels with optional filtering
+      parameters:
+        - name: location
+          in: query
+          description: Filter hotels by location
+          schema:
+            type: string
+        - name: checkIn
+          in: query
+          description: Check-in date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: checkOut
+          in: query
+          description: Check-out date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: guests
+          in: query
+          description: Number of guests
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: A list of hotels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hotel'
+  /hotels/{id}:
+    get:
+      summary: Get hotel by ID
+      description: Get detailed information about a specific hotel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the hotel
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Hotel details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hotel'
+        '404':
+          description: Hotel not found
+  /bookings:
+    get:
+      summary: List all bookings
+      description: Get a list of all bookings
+      responses:
+        '200':
+          description: A list of bookings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+    post:
+      summary: Create booking
+      description: Create a new hotel booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingInput'
+      responses:
+        '201':
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '400':
+          description: Invalid input
+  /bookings/{id}:
+    get:
+      summary: Get booking by ID
+      description: Get detailed information about a specific booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the booking
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: Booking not found
+    patch:
+      summary: Update booking
+      description: Update an existing booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the booking
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingUpdateInput'
+      responses:
+        '200':
+          description: Booking updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: Booking not found
+    delete:
+      summary: Delete booking
+      description: Cancel and delete a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the booking
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Booking deleted successfully
+        '404':
+          description: Booking not found
+  /bookings/{id}/cancel:
+    patch:
+      summary: Cancel booking
+      description: Cancel a booking
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the booking
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: Booking not found
+  /users:
+    post:
+      summary: Register user
+      description: Create a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      description: Get detailed information about a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the user
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+  /rooms:
+    get:
+      summary: List rooms
+      description: Get a list of rooms with optional filtering
+      parameters:
+        - name: hotelId
+          in: query
+          description: Filter rooms by hotel ID
+          schema:
+            type: string
+        - name: available
+          in: query
+          description: Filter by availability
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: A list of rooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Room'
+components:
+  schemas:
+    Hotel:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        location:
+          type: string
+        description:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        amenities:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+          format: float
+        priceRange:
+          type: object
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+    Room:
+      type: object
+      properties:
+        id:
+          type: string
+        hotelId:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+        capacity:
+          type: integer
+        price:
+          type: number
+        amenities:
+          type: array
+          items:
+            type: string
+        available:
+          type: boolean
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        hotelId:
+          type: string
+        roomId:
+          type: string
+        checkIn:
+          type: string
+          format: date
+        checkOut:
+          type: string
+          format: date
+        guests:
+          type: integer
+        totalPrice:
+          type: number
+        status:
+          type: string
+          enum:
+            - confirmed
+            - pending
+            - cancelled
+            - completed
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    BookingInput:
+      type: object
+      required:
+        - userId
+        - hotelId
+        - roomId
+        - checkIn
+        - checkOut
+        - guests
+      properties:
+        userId:
+          type: string
+        hotelId:
+          type: string
+        roomId:
+          type: string
+        checkIn:
+          type: string
+          format: date
+        checkOut:
+          type: string
+          format: date
+        guests:
+          type: integer
+    BookingUpdateInput:
+      type: object
+      properties:
+        checkIn:
+          type: string
+          format: date
+        checkOut:
+          type: string
+          format: date
+        guests:
+          type: integer
+        status:
+          type: string
+          enum:
+            - confirmed
+            - pending
+            - cancelled
+            - completed
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    UserInput:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string 
